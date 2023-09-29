@@ -1,0 +1,34 @@
+name: Selenium Grid
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Java
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+
+    - name: Start Selenium Grid
+      run: |
+        docker network create grid
+        docker run -d -p 4444:4444 --net grid --name selenium-hub selenium/hub:3.141.59
+        docker run -d --net grid -e HUB_HOST=selenium-hub -v /dev/shm:/dev/shm selenium/node-chrome:3.141.59
+        docker run -d --net grid -e HUB_HOST=selenium-hub -v /dev/shm:/dev/shm selenium/node-firefox:3.141.59
+        
+    - name: Build and run tests
+      run: |
+        ./mvn clean test
+        #./gradlew clean test
+        # Run your Selenium tests here using the Selenium Grid URL (e.g., http://localhost:4444/wd/hub)
+
+    - name: Clean up Selenium Grid
+      run: |
+        docker stop selenium-hub
+        docker network rm grid
