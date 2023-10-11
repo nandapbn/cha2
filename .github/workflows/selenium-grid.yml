@@ -31,4 +31,5 @@ jobs:
     - name: Clean up Selenium Grid
       run: |
         docker stop selenium-hub
+        docker container stop $(docker container ls -aq)
         docker network rm grid
